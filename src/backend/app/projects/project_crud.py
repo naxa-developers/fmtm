@@ -1690,6 +1690,12 @@ def get_task_geometry(db: Session, project_id: int):
 
 
 async def get_project_features_geojson(db: Session, project_id: int):
+    db_features = (
+        db.query(db_models.DbFeatures)
+        .filter(db_models.DbFeatures.project_id == project_id)
+        .all()
+    )
+
     """Get a geojson of all features for a task."""
     query = text(
         f"""SELECT jsonb_build_object(
@@ -1711,6 +1717,14 @@ async def get_project_features_geojson(db: Session, project_id: int):
 
     result = db.execute(query)
     features = result.fetchone()[0]
+
+    # Create mapping feat_id:task_id
+    task_feature_mapping = {feat.id: feat.task_id for feat in db_features}
+
+    for feature in features["features"]:
+        if (feat_id := feature["id"]) in task_feature_mapping:
+            feature["properties"]["task_id"] = task_feature_mapping[feat_id]
+
     return features
 
 
