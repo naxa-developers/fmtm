@@ -1,4 +1,5 @@
 # Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+#
 # This file is part of FMTM.
 #
 #     FMTM is free software: you can redistribute it and/or modify
@@ -13,77 +14,10 @@
 #
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
-# 
 
-# Distribution / packaging
-.Python
-src/backend/app/images
-env/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-venv/
-src/backend/osm-fieldwork
 
-__pycache__
-credentials.txt
-odk2odm_venv/
+"""Static files."""
 
-# PyCharm
-.idea/
+import os
 
-# VSCode
-.vscode
-
-# test scripts and files
-db.sqlite3
-
-# emacs
-*~
-
-# mac
-.DS_Store
-
-# ignore settings
-**/*.env
-
-# ignore python environments
-venv
-fmtm-env
-
-# project related
-temp_webmaps/local_only
-temp_webmaps/Naivasha
-
-# node & pnpm
-**/**/node_modules
-**/**/package-lock.json
-**/**/yarn.lock
-**/**/.pnpm-store
-
-# pdm
-**/**/.pdm.toml
-**/**/pdm.toml
-**/**/.pdm-python
-**/**/__pypackages__
-
-# mkdocs
-site
-
-# Bash install script
-envsubst
-
-# Scripts
-**/openapi.json
+data_path = os.path.dirname(os.path.abspath(__file__))

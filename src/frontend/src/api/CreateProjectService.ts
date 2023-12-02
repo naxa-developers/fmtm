@@ -7,6 +7,7 @@ import {
 } from '../models/createproject/createProjectModel';
 import { CommonActions } from '../store/slices/CommonSlice';
 import { ValidateCustomFormResponse } from 'store/types/ICreateProject';
+import { task_split_type } from '../types/enums';
 
 const CreateProjectService: Function = (
   url: string,
@@ -26,7 +27,7 @@ const CreateProjectService: Function = (
         const resp: ProjectDetailsModel = postNewProjectDetails.data;
         await dispatch(CreateProjectActions.PostProjectDetails(resp));
 
-        if (payload.splitting_algorithm === 'choose_area_as_task') {
+        if (payload.task_split_type === task_split_type['choose_area_as_task']) {
           await dispatch(
             UploadAreaService(`${import.meta.env.VITE_API_URL}/projects/${resp.id}/upload_multi_polygon`, fileUpload),
           );
@@ -121,7 +122,7 @@ const UploadAreaService: Function = (url: string, filePayload: any, payload: any
     const postUploadArea = async (url, filePayload, payload) => {
       try {
         const areaFormData = new FormData();
-        areaFormData.append('upload', filePayload);
+        areaFormData.append('project_geojson', filePayload);
         if (payload?.dimension) {
           areaFormData.append('dimension', payload?.dimension);
         }
@@ -275,7 +276,7 @@ const GetDividedTaskFromGeojson: Function = (url: string, payload: any) => {
     const getDividedTaskFromGeojson = async (url, payload) => {
       try {
         const dividedTaskFormData = new FormData();
-        dividedTaskFormData.append('upload', payload.geojson);
+        dividedTaskFormData.append('project_geojson', payload.geojson);
         dividedTaskFormData.append('dimension', payload.dimension);
         const getGetDividedTaskFromGeojsonResponse = await axios.post(url, dividedTaskFormData);
         const resp: OrganisationListModel = getGetDividedTaskFromGeojsonResponse.data;
@@ -303,9 +304,9 @@ const GetIndividualProjectDetails: Function = (url: string, payload: any) => {
         const formattedOutlineGeojson = { type: 'FeatureCollection', features: [{ ...resp.outline_geojson, id: 1 }] };
         const modifiedResponse = {
           ...resp,
-          name: resp.project_info?.[0].name,
-          description: resp.project_info?.[0].description,
-          short_description: resp.project_info?.[0].short_description,
+          name: resp.project_info?.name,
+          description: resp.project_info?.description,
+          short_description: resp.project_info?.short_description,
           outline_geojson: formattedOutlineGeojson,
         };
 
@@ -334,7 +335,7 @@ const TaskSplittingPreviewService: Function = (
     const getTaskSplittingGeojson = async (url, fileUpload, isCustomDataExtract) => {
       try {
         const taskSplittingFileFormData = new FormData();
-        taskSplittingFileFormData.append('upload', fileUpload);
+        taskSplittingFileFormData.append('project_geojson', fileUpload);
         taskSplittingFileFormData.append('no_of_buildings', no_of_buildings);
         taskSplittingFileFormData.append('has_data_extracts', isCustomDataExtract);
 
@@ -437,7 +438,7 @@ const EditProjectBoundaryService: Function = (url: string, geojsonUpload: any, d
     const postFormUpdate = async (url, geojsonUpload, dimension) => {
       try {
         const editBoundaryFormData = new FormData();
-        editBoundaryFormData.append('upload', geojsonUpload);
+        editBoundaryFormData.append('project_geojson', geojsonUpload);
         if (dimension) {
           editBoundaryFormData.append('dimension', dimension);
         }

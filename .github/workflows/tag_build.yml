@@ -9,9 +9,10 @@ on:
 
 jobs:
   backend-build:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.2.2
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.4.0
     with:
       context: src/backend
       build_target: prod
       image_name: ghcr.io/${{ github.repository }}/backend
+      multi_arch: true
 # Frontend is not built as build variables are required
