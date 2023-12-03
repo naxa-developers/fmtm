@@ -2,8 +2,12 @@ import { Fill, Icon, Stroke, Style } from 'ol/style';
 import { transform } from 'ol/proj';
 import { Point } from 'ol/geom';
 import AssetModules from '../shared/AssetModules';
+import { createTextStyle, defaultStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
 
-function createPolygonStyle(fillColor, strokeColor) {
+
+
+const strokeColor = 'rgb(0,0,0,0.5)';
+function createPolygonStyle(fillColor, strokeColor,customLabel) {
   return new Style({
     stroke: new Stroke({
       color: strokeColor,
@@ -12,9 +16,11 @@ function createPolygonStyle(fillColor, strokeColor) {
     fill: new Fill({
       color: fillColor,
     }),
+    text: customLabel,
+
   });
 }
-function createIconStyle(iconSrc) {
+function createIconStyle(iconSrc,customLabel) {
   return new Style({
     image: new Icon({
       anchor: [0.5, 1],
@@ -23,26 +29,28 @@ function createIconStyle(iconSrc) {
       anchorYUnits: 'pixels',
       src: iconSrc,
     }),
+    text: customLabel,
+
     geometry: function (feature) {
       const convertedCenter = transform(feature.values_.centroid, 'EPSG:4326', 'EPSG:3857');
       return new Point(convertedCenter);
     },
   });
 }
-
-const strokeColor = 'rgb(0,0,0,0.5)';
-
-const getTaskStatusStyle = (feature, mapTheme) => {
+const getTaskStatusStyle = (feature,resolution, mapTheme) => {
   let id = feature.getId().toString().replace('_', ',');
+  const customTaskLabel =createTextStyle({...defaultStyles,showLabel:true,labelField:'name'}, feature, resolution);
   const status = id.split(',')[1];
-  const lockedPolygonStyle = createPolygonStyle(mapTheme.palette.mapFeatureColors.locked_for_mapping_rgb, strokeColor);
+  const lockedPolygonStyle = createPolygonStyle(mapTheme.palette.mapFeatureColors.locked_for_mapping_rgb, strokeColor,customTaskLabel);
   const lockedValidationStyle = createPolygonStyle(
     mapTheme.palette.mapFeatureColors.locked_for_validation_rgb,
     strokeColor,
+    customTaskLabel
   );
   const iconStyle = createIconStyle(AssetModules.LockPng);
   const redIconStyle = createIconStyle(AssetModules.RedLockPng);
 
+    
   const geojsonStyles = {
     READY: new Style({
       stroke: new Stroke({
@@ -52,6 +60,8 @@ const getTaskStatusStyle = (feature, mapTheme) => {
       fill: new Fill({
         color: mapTheme.palette.mapFeatureColors.ready_rgb,
       }),
+      text: customTaskLabel,
+
     }),
     LOCKED_FOR_MAPPING: [lockedPolygonStyle, iconStyle],
     MAPPED: new Style({
@@ -62,6 +72,8 @@ const getTaskStatusStyle = (feature, mapTheme) => {
       fill: new Fill({
         color: mapTheme.palette.mapFeatureColors.mapped_rgb,
       }),
+      text: customTaskLabel,
+
     }),
     LOCKED_FOR_VALIDATION: [lockedValidationStyle, redIconStyle],
 
@@ -73,6 +85,8 @@ const getTaskStatusStyle = (feature, mapTheme) => {
       fill: new Fill({
         color: mapTheme.palette.mapFeatureColors.validated_rgb,
       }),
+      text: customTaskLabel,
+
     }),
     INVALIDATED: new Style({
       stroke: new Stroke({
@@ -82,6 +96,8 @@ const getTaskStatusStyle = (feature, mapTheme) => {
       fill: new Fill({
         color: mapTheme.palette.mapFeatureColors.invalidated_rgb,
       }),
+      text: customTaskLabel,
+
     }),
     BAD: new Style({
       stroke: new Stroke({
@@ -91,6 +107,8 @@ const getTaskStatusStyle = (feature, mapTheme) => {
       fill: new Fill({
         color: mapTheme.palette.mapFeatureColors.bad_rgb,
       }),
+      text: customTaskLabel,
+
     }),
     SPLIT: new Style({
       stroke: new Stroke({
@@ -100,6 +118,8 @@ const getTaskStatusStyle = (feature, mapTheme) => {
       fill: new Fill({
         color: mapTheme.palette.mapFeatureColors.split_rgb,
       }),
+      text: customTaskLabel,
+
     }),
   };
   return geojsonStyles[status];

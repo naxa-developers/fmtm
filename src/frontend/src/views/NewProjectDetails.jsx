@@ -303,7 +303,7 @@ const Home = () => {
                   mapOnClick={projectClickOnMap}
                   zoomToLayer
                   zIndex={5}
-                  getTaskStatusStyle={(feature) => getTaskStatusStyle(feature, mapTheme)}
+                  getTaskStatusStyle={(feature,resolution) => getTaskStatusStyle(feature,resolution, mapTheme)}
                 />
               )}
               {taskBuildingGeojson && taskBuildingGeojson?.features?.length > 0 && (
