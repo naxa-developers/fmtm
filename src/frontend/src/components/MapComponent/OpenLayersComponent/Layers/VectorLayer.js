@@ -186,7 +186,7 @@ const VectorLayer = ({
 
   useEffect(() => {
     if (!map || !vectorLayer || !getTaskStatusStyle) return;
-    vectorLayer.setStyle((feature) => getTaskStatusStyle(feature));
+    vectorLayer.setStyle((feature,resolution) => getTaskStatusStyle(feature,resolution));
   }, [map, vectorLayer, getTaskStatusStyle]);
 
   useEffect(() => {
