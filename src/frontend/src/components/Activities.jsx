@@ -25,25 +25,23 @@ const Activities = ({ history, defaultTheme, mapDivPostion, map, view, state, pa
         <CoreModules.Typography variant="h2" style={{ wordWrap: 'break-word' }}>
           {history.action_text}
         </CoreModules.Typography>
-        {/* <CoreModules.Stack direction={'row-reverse'}>
+        <CoreModules.Stack direction={'row-reverse'}>
           <IconButtonCard
             element={
               <CoreModules.IconButton
                 onClick={async () => {
                   const main = document.getElementsByClassName('mainview')[0];
-                  await main.scrollTo({
+                  main.scrollTo({
                     top: mapDivPostion,
                   });
-
-                  const centroid = state.projectTaskBoundries[index].taskBoundries.filter((task) => {
-                    return task.id == history.taskId;
-                  })[0].outline_centroid.geometry.coordinates;
-
-                  map.getView().setCenter(centroid);
-
-                  setTimeout(() => {
-                    view.animate({ zoom: 19, easing: easeOut, duration: 2000 });
-                  }, 100);
+                  const filteredLayerFromCollection = map.getAllLayers().find((layer)=> layer.get('name')==='project-area');
+                  const filteredTaskFromLayers =  filteredLayerFromCollection.getSource().getFeatures().find((task) => {
+                    return +task.values_.name == +history.taskId;
+                  })
+                  var ext=filteredTaskFromLayers.getGeometry().getExtent();
+                  map.getView().fit(ext, {
+                    padding: [20, 20, 20, 20],
+                  });
                 }}
                 color="info"
                 aria-label="share qrcode"
@@ -52,7 +50,7 @@ const Activities = ({ history, defaultTheme, mapDivPostion, map, view, state, pa
               </CoreModules.IconButton>
             }
           />
-        </CoreModules.Stack> */}
+        </CoreModules.Stack>
       </CoreModules.Stack>
 
       <CoreModules.Divider color="lightgray" />
