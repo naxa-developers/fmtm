@@ -17,9 +17,9 @@
 #
 
 import json
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
@@ -29,6 +29,7 @@ from ..models.enums import TaskStatus
 from ..projects import project_crud, project_schemas
 from ..users import user_schemas
 from . import tasks_crud, tasks_schemas
+from ..db import db_models
 
 router = APIRouter(
     prefix="/tasks",
@@ -37,15 +38,46 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+from datetime import datetime
 
 @router.get("/task-list", response_model=List[tasks_schemas.TaskOut])
 async def read_task_list(
     project_id: int,
     limit: int = 1000,
     db: Session = Depends(database.get_db),
+    user: Optional[str] = None,
+    status: Optional[str] = Query(None, description="Select Task Status", enum =[status.name for status in TaskStatus])
 ):
     tasks = tasks_crud.get_tasks(db, project_id, limit)
     if tasks:
+        user_ids = None
+        if user:
+            user_ids = [
+                user.id
+                for user in db.query(db_models.DbUser.id).filter(db_models.DbUser.username.ilike(f"%{user}%")).all()
+            ]
+            if user_ids:
+                tasks = [
+                    task
+                    for task in tasks
+                        if any(
+                            user_id_for_task in user_ids
+                            for user_id_for_task in [
+                                task.lock_holder,
+                                task.locked_by,
+                                task.mapped_by,
+                                task.mapper,
+                                task.validated_by,
+                            ]
+                    )
+                ]
+            else:
+                raise HTTPException(status_code = 404, detail="User not found")
+        if status:
+            tasks = [task for task in tasks if task.task_status == TaskStatus[status.upper()]]
+
+        # Sorting tasks based on date
+        tasks = sorted(tasks, key=lambda x: max((entry.action_date for entry in x.task_history), default=datetime.min), reverse=True)
         return tasks
     else:
         raise HTTPException(status_code=404, detail="Tasks not found")
