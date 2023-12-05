@@ -2,7 +2,7 @@ import { Fill, Icon, Stroke, Style } from 'ol/style';
 import { transform } from 'ol/proj';
 import { Point } from 'ol/geom';
 import AssetModules from '../shared/AssetModules';
-import { createTextStyle, defaultStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import { task_priority_str } from '../types/enums';
 
 
 
@@ -39,9 +39,8 @@ function createIconStyle(iconSrc,customLabel) {
 }
 const getTaskStatusStyle = (feature,resolution, mapTheme) => {
   let id = feature.getId().toString().replace('_', ',');
-  const customTaskLabel =createTextStyle({...defaultStyles,showLabel:true,labelField:'name',labelOffsetY:-20}, feature, resolution);
-  const status = id.split(',')[1];
-  const lockedPolygonStyle = createPolygonStyle(mapTheme.palette.mapFeatureColors.locked_for_mapping_rgb, strokeColor,customTaskLabel);
+  const status = task_priority_str[id.split(',')[1]];
+  const lockedPolygonStyle = createPolygonStyle(mapTheme.palette.mapFeatureColors.locked_for_mapping_rgb, strokeColor);
   const lockedValidationStyle = createPolygonStyle(
     mapTheme.palette.mapFeatureColors.locked_for_validation_rgb,
     strokeColor,
