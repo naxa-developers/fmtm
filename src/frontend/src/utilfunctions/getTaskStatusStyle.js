@@ -39,7 +39,7 @@ function createIconStyle(iconSrc,customLabel) {
 }
 const getTaskStatusStyle = (feature,resolution, mapTheme) => {
   let id = feature.getId().toString().replace('_', ',');
-  const customTaskLabel =createTextStyle({...defaultStyles,showLabel:true,labelField:'name'}, feature, resolution);
+  const customTaskLabel =createTextStyle({...defaultStyles,showLabel:true,labelField:'name',labelOffsetY:-20}, feature, resolution);
   const status = id.split(',')[1];
   const lockedPolygonStyle = createPolygonStyle(mapTheme.palette.mapFeatureColors.locked_for_mapping_rgb, strokeColor,customTaskLabel);
   const lockedValidationStyle = createPolygonStyle(
