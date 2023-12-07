@@ -144,7 +144,7 @@ function getText(style, feature, resolution) {
   return text;
 }
 
-function createTextStyle(style, feature, resolution) {
+export function createTextStyle(style, feature, resolution) {
   const {
     labelFont,
     labelFontSize,
