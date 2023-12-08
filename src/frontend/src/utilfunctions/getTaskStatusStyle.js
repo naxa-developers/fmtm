@@ -3,6 +3,7 @@ import { transform } from 'ol/proj';
 import { Point } from 'ol/geom';
 import AssetModules from '../shared/AssetModules';
 import { createTextStyle, defaultStyles } from '../components/MapComponent/OpenLayersComponent/helpers/styleUtils';
+import { task_priority_str } from '../types/enums';
 
 
 

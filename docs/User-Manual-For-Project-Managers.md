@@ -133,7 +133,7 @@ Click on "Next" to proceed.
 ![WhatsApp Image 2023-06-23 at 1 17 37 PM](https://github.com/hotosm/fmtm/assets/97789856/f53d76b4-e6cc-44a4-8c7c-00082eb72693)
 
 14. Select Form . Select the form category you want to use for the field mapping, such as "Data Extract" or any other relevant category.
-    Choose a specific form from the existing forms or upload a custom form if needed.
+    Choose a specific form from the existing categories or upload a custom form if needed.
     Click on "Submit" to proceed.
 
 ![WhatsApp Image 2023-06-23 at 1 37 19 PM](https://github.com/hotosm/fmtm/assets/97789856/f9a4bed7-d1a9-44dd-b2d4-b55f428f9416)
@@ -187,7 +187,7 @@ Click on "Next" to proceed.
 
 If you encounter any issues or need assistance while using FMTM, you can access the following resources:
 
-- Check the [FAQs](https://github.com/hotosm/fmtm/wiki/FAQ) .
+- Check the [FAQs](https://hotosm.github.io/fmtm/FAQ) .
 - Ask your doubts in the [Slack channel: #fmtm-field-pilots](https://hotosm.slack.com/archives/C04PCBFDEGN)
 
 ## Thank you

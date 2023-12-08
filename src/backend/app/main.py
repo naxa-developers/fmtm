@@ -19,33 +19,47 @@
 
 import logging
 import sys
-from typing import Union
+from contextlib import asynccontextmanager
 
 import sentry_sdk
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from loguru import logger as log
 from osm_fieldwork.xlsforms import xlsforms_path
 
-from .__version__ import __version__
-from .auth import auth_routes
-from .central import central_routes
-from .config import settings
-from .db.database import get_db
-from .organization import organization_routes
-from .projects import project_routes
-from .projects.project_crud import read_xlsforms
-from .submission import submission_routes
-from .tasks import tasks_routes
-from .users import user_routes
+from app.__version__ import __version__
+from app.auth import auth_routes
+from app.central import central_routes
+from app.config import settings
+from app.db.database import get_db
+from app.organization import organization_routes
+from app.projects import project_routes
+from app.projects.project_crud import read_xlsforms
+from app.submission import submission_routes
+from app.tasks import tasks_routes
+from app.users import user_routes
 
+# Add sentry tracing only in prod
 if not settings.DEBUG:
     sentry_sdk.init(
         dsn=settings.SENTRY_DSN,
         traces_sample_rate=0.1,
     )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI startup/shutdown event."""
+    log.debug("Starting up FastAPI server.")
+    log.debug("Reading XLSForms from DB.")
+    await read_xlsforms(next(get_db()), xlsforms_path)
+
+    yield
+
+    # Shutdown events
+    log.debug("Shutting down FastAPI server.")
 
 
 def get_application() -> FastAPI:
@@ -59,6 +73,7 @@ def get_application() -> FastAPI:
             "url": "https://raw.githubusercontent.com/hotosm/fmtm/main/LICENSE",
         },
         debug=settings.DEBUG,
+        lifespan=lifespan,
         root_path=settings.API_PREFIX,
     )
 
@@ -136,18 +151,36 @@ def get_logger():
             # format=log_json_format, # JSON format func
         )
 
-        log.add(
-            "/opt/logs/create_project.json",
-            level=settings.LOG_LEVEL,
-            enqueue=True,
-            serialize=True,
-            rotation="00:00",
-            retention="10 days",
-            filter=lambda record: record["extra"].get("task") == "create_project",
-        )
+    log.add(
+        "/opt/logs/create_project.json",
+        level=settings.LOG_LEVEL,
+        enqueue=True,
+        serialize=True,
+        rotation="00:00",
+        retention="10 days",
+        filter=lambda record: record["extra"].get("task") == "create_project",
+    )
 
 
 api = get_application()
+
+
+# Add endpoint profiler to check for bottlenecks
+if settings.DEBUG:
+    from pyinstrument import Profiler
+
+    @api.middleware("http")
+    async def profile_request(request: Request, call_next):
+        """Calculate the execution time for routes."""
+        profiling = request.query_params.get("profile", False)
+        if profiling:
+            profiler = Profiler(interval=0.001, async_mode="enabled")
+            profiler.start()
+            await call_next(request)
+            profiler.stop()
+            return HTMLResponse(profiler.output_html())
+        else:
+            return await call_next(request)
 
 
 @api.exception_handler(RequestValidationError)
@@ -170,34 +203,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(status_code=status_code, content={"errors": errors})
 
 
-@api.on_event("startup")
-async def startup_event():
-    """Commands to run on server startup."""
-    log.debug("Starting up FastAPI server.")
-    log.debug("Reading XLSForms from DB.")
-    read_xlsforms(next(get_db()), xlsforms_path)
-
-
-@api.on_event("shutdown")
-async def shutdown_event():
-    """Commands to run on server shutdown."""
-    log.debug("Shutting down FastAPI server.")
-
-
 @api.get("/")
-def home():
+async def home():
     """Redirect home to docs."""
     return RedirectResponse("/docs")
-
-
-@api.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    """Get item IDs."""
-    return {"item_id": item_id, "q": q}
-
-
-@api.get("/images/{image_filename}")
-def get_images(image_filename: str):
-    """Download image files."""
-    path = f"./app/images/{image_filename}"
-    return FileResponse(path)

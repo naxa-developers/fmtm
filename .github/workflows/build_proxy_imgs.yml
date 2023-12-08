@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-cert-init-main:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.2.2
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.4.0
     with:
       context: nginx
       build_target: certs-init-main
@@ -18,9 +18,10 @@ jobs:
         "ghcr.io/${{ github.repository }}/proxy:certs-init-main"
       extra_build_args: |
         NGINX_TAG=${{ vars.NGINX_TAG }}
+      multi_arch: true
 
   build-cert-init-dev:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.2.2
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.4.0
     with:
       context: nginx
       build_target: certs-init-development
@@ -29,9 +30,10 @@ jobs:
         "ghcr.io/${{ github.repository }}/proxy:certs-init-staging"
       extra_build_args: |
         NGINX_TAG=${{ vars.NGINX_TAG }}
+      multi_arch: true
 
   build-proxy-main:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.2.2
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.4.0
     with:
       context: nginx
       build_target: main
@@ -39,9 +41,10 @@ jobs:
         "ghcr.io/${{ github.repository }}/proxy:main"
       extra_build_args: |
         NGINX_TAG=${{ vars.NGINX_TAG }}
+      multi_arch: true
 
   build-proxy-main-plus-script:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.2.2
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.4.0
     with:
       context: nginx
       build_target: main-plus-script
@@ -49,9 +52,10 @@ jobs:
         "ghcr.io/${{ github.repository }}/proxy:main-plus-script"
       extra_build_args: |
         NGINX_TAG=${{ vars.NGINX_TAG }}
+      multi_arch: true
 
   build-proxy-dev:
-    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.2.2
+    uses: hotosm/gh-workflows/.github/workflows/image_build.yml@1.4.0
     with:
       context: nginx
       build_target: development
@@ -60,3 +64,4 @@ jobs:
         "ghcr.io/${{ github.repository }}/proxy:staging"
       extra_build_args: |
         NGINX_TAG=${{ vars.NGINX_TAG }}
+      multi_arch: true

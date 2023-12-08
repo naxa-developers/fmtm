@@ -1,4 +1,5 @@
 # Copyright (c) 2022, 2023 Humanitarian OpenStreetMap Team
+#
 # This file is part of FMTM.
 #
 #     FMTM is free software: you can redistribute it and/or modify
@@ -13,32 +14,10 @@
 #
 #     You should have received a copy of the GNU General Public License
 #     along with FMTM.  If not, see <https:#www.gnu.org/licenses/>.
-#
-
-ARG node_version=18.17
 
 
+"""Static files."""
 
-FROM docker.io/bitnami/git:2 as repo
-ARG ODK_CENTRAL_TAG
-RUN git clone --depth 1 --branch ${ODK_CENTRAL_TAG} \
-    "https://github.com/getodk/central.git" \
-    && cd central && git submodule update --init
+import os
 
-
-
-FROM docker.io/node:${node_version}-slim as build
-WORKDIR /frontend
-COPY --from=repo central/client/ /frontend/
-RUN npm ci --no-audit --fund=false --update-notifier=false
-RUN VUE_APP_OIDC_ENABLED="false" npm run build
-
-
-
-FROM docker.io/rclone/rclone:1.64 as prod
-VOLUME /frontend
-COPY container-entrypoint.sh /
-RUN chmod +x /container-entrypoint.sh
-ENTRYPOINT ["/container-entrypoint.sh"]
-WORKDIR /app
-COPY --from=build /frontend/dist .
+data_path = os.path.dirname(os.path.abspath(__file__))

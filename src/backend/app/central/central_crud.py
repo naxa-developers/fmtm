@@ -53,7 +53,7 @@ def get_odk_project(odk_central: project_schemas.ODKCentral = None):
         log.debug(f"Connecting to ODKCentral: url={url} user={user}")
         project = OdkProject(url, user, pw)
     except Exception as e:
-        log.error(e)
+        log.exception(e)
         raise HTTPException(
             status_code=500, detail=f"Error creating project on ODK Central: {e}"
         ) from e
@@ -144,7 +144,9 @@ def create_odk_project(name: str, odk_central: project_schemas.ODKCentral = None
         ) from e
 
 
-def delete_odk_project(project_id: int, odk_central: project_schemas.ODKCentral = None):
+async def delete_odk_project(
+    project_id: int, odk_central: project_schemas.ODKCentral = None
+):
     """Delete a project from a remote ODK Server."""
     # FIXME: when a project is deleted from Central, we have to update the
     # odkid in the projects table
@@ -301,10 +303,10 @@ def get_form_full_details(
 ):
     form = get_odk_form(odk_central)
     form_details = form.getFullDetails(odk_project_id, form_id)
-    return form_details.json()
+    return form_details
 
 
-async def get_project_full_details(
+def get_odk_project_full_details(
     odk_project_id: int, odk_central: project_schemas.ODKCentral
 ):
     project = get_odk_project(odk_central)
@@ -537,7 +539,9 @@ def generate_updated_xform(
     return outfile
 
 
-def create_qrcode(project_id: int, token: str, name: str, odk_central_url: str = None):
+async def create_qrcode(
+    project_id: int, token: str, name: str, odk_central_url: str = None
+):
     """Create the QR Code for an app-user."""
     if not odk_central_url:
         log.debug("ODKCentral connection variables not set in function")
@@ -629,139 +633,3 @@ def convert_csv(
     csvin.finishGeoJson()
 
     return True
-
-
-def create_odk_xform_for_janakpur(
-    project_id: int,
-    xform_id: str,
-    filespec: str,
-    odk_credentials: project_schemas.ODKCentral = None,
-    create_draft: bool = False,
-    upload_media=True,
-    convert_to_draft_when_publishing=True,
-):
-    """Create an XForm on a remote ODK Central server."""
-    title = os.path.basename(os.path.splitext(filespec)[0])
-    # result = xform.createForm(project_id, title, filespec, True)
-    # Pass odk credentials of project in xform
-
-    if not odk_credentials:
-        odk_credentials = project_schemas.ODKCentral(
-            odk_central_url=settings.ODK_CENTRAL_URL,
-            odk_central_user=settings.ODK_CENTRAL_USER,
-            odk_central_password=settings.ODK_CENTRAL_PASSWD,
-        )
-    try:
-        xform = get_odk_form(odk_credentials)
-    except Exception as e:
-        log.error(e)
-        raise HTTPException(
-            status_code=500, detail={"message": "Connection failed to odk central"}
-        ) from e
-
-    result = xform.createForm(project_id, xform_id, filespec, create_draft)
-
-    if result != 200 and result != 409:
-        return result
-
-    # This modifies an existing published XForm to be in draft mode.
-    # An XForm must be in draft mode to upload an attachment.
-    if upload_media:
-        # Upload buildings file
-        building_file = f"/tmp/buildings_{title}.geojson"
-
-        result = xform.uploadMedia(
-            project_id, title, building_file, convert_to_draft_when_publishing
-        )
-
-        # Upload roads file
-        road_file = f"/tmp/roads_{title}.geojson"
-        result = xform.uploadMedia(
-            project_id, title, road_file, convert_to_draft_when_publishing
-        )
-
-    result = xform.publishForm(project_id, title)
-    return result
-
-
-def generate_updated_xform_for_janakpur(
-    xlsform: str,
-    xform: str,
-    form_type: str,
-):
-    """Update the version in an XForm so it's unique."""
-    name = os.path.basename(xform).replace(".xml", "")
-
-    log.debug(f"Name in form = {name}")
-
-    outfile = xform
-    if form_type != "xml":
-        try:
-            xls2xform_convert(xlsform_path=xlsform, xform_path=outfile, validate=False)
-        except Exception as e:
-            log.error(f"Couldn't convert {xlsform} to an XForm!", str(e))
-            raise HTTPException(status_code=400, detail=str(e)) from e
-
-        if os.path.getsize(outfile) <= 0:
-            log.warning(f"{outfile} is empty!")
-            raise HTTPException(status=400, detail=f"{outfile} is empty!") from None
-
-        xls = open(outfile, "r")
-        data = xls.read()
-        xls.close()
-    else:
-        xls = open(xlsform, "r")
-        data = xls.read()
-        xls.close()
-
-    tmp = name.split("_")
-    tmp[0]
-    tmp[1]
-    id = tmp[2].split(".")[0]
-
-    buildings_extract = f"jr://file/buildings_{name}.geojson"
-    roads_extract = f"jr://file/roads_{name}.geojson"
-
-    namespaces = {
-        "h": "http://www.w3.org/1999/xhtml",
-        "odk": "http://www.opendatakit.org/xforms",
-        "xforms": "http://www.w3.org/2002/xforms",
-    }
-
-    import xml.etree.ElementTree as ET
-
-    root = ET.fromstring(data)
-    head = root.find("h:head", namespaces)
-    model = head.find("xforms:model", namespaces)
-    instances = model.findall("xforms:instance", namespaces)
-
-    index = 0
-    for inst in instances:
-        try:
-            if "src" in inst.attrib:
-                print("SRC = Present")
-                if (inst.attrib["src"]) == "jr://file/buildings.geojson":  # FIXME
-                    print("INST attribs = ", inst.attrib["src"])
-                    inst.attrib["src"] = buildings_extract
-
-                if (inst.attrib["src"]) == "jr://file/roads.geojson":  # FIXME
-                    inst.attrib["src"] = roads_extract
-
-            # Looking for data tags
-            data_tags = inst.findall("xforms:data", namespaces)
-            if data_tags:
-                for dt in data_tags:
-                    dt.attrib["id"] = id
-        except Exception:
-            continue
-        index += 1
-
-    # Save the modified XML
-    newxml = ET.tostring(root)
-
-    # write the updated XML file
-    outxml = open(outfile, "w")
-    outxml.write(newxml.decode())
-    outxml.close()
-
-    return outfile

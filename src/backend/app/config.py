@@ -110,11 +110,42 @@ class Settings(BaseSettings):
     OSM_LOGIN_REDIRECT_URI: str = "http://127.0.0.1:7051/osmauth/"
 
     S3_ENDPOINT: str = "http://s3:9000"
-    S3_ACCESS_KEY: str
-    S3_SECRET_KEY: str
-    S3_BUCKET_NAME_BASEMAPS: str = "basemaps"
+    S3_ACCESS_KEY: Optional[str] = ""
+    S3_SECRET_KEY: Optional[str] = ""
+    S3_BUCKET_NAME: str = "fmtm-data"
+    S3_DOWNLOAD_ROOT: Optional[str] = None
 
-    UNDERPASS_API_URL: str = "https://raw-data-api0.hotosm.org/v1"
+    @field_validator("S3_DOWNLOAD_ROOT", mode="before")
+    @classmethod
+    def configure_s3_download_root(cls, v: Optional[str], info: ValidationInfo) -> str:
+        """Set S3_DOWNLOAD_ROOT for S3 downloads.
+
+        This is required, when we use a containerised S3 service.
+        The S3_ENDPOINT is a docker compose service name and not
+        resolvable outside of the stack.
+
+        S3_DOWNLOAD_ROOT is equal to S3_ENDPOINT if a public S3 instance
+        is used (e.g. AWS S3).
+        """
+        # If set manually, pass through
+        if v and isinstance(v, str):
+            return v
+
+        # Externally hosted S3
+        s3_endpoint = info.data.get("S3_ENDPOINT")
+        if s3_endpoint.startswith("https://"):
+            return s3_endpoint
+
+        # Containerised S3
+        else:
+            fmtm_domain = info.data.get("FMTM_DOMAIN")
+            # Local dev
+            if info.data.get("DEBUG"):
+                dev_port = info.data.get("FMTM_DEV_PORT")
+                return f"http://s3.{fmtm_domain}:{dev_port}"
+            return f"https://s3.{fmtm_domain}"
+
+    UNDERPASS_API_URL: str = "https://api-prod.raw-data.hotosm.org/v1/"
     SENTRY_DSN: Optional[str] = None
 
     model_config = SettingsConfigDict(

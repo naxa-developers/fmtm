@@ -4,6 +4,8 @@ import ProjectTaskStatus from '../api/ProjectTaskStatus';
 import MapStyles from '../hooks/MapStyles';
 import CoreModules from '../shared/CoreModules';
 import { CommonActions } from '../store/slices/CommonSlice';
+import { task_priority_str } from '../types/enums';
+
 export default function Dialog({ taskId, feature, map, view }) {
   // const featureStatus = feature.id_ != undefined ? feature.id_.replace("_", ",").split(',')[1] : null;
   const projectData = CoreModules.useAppSelector((state) => state.project.projectTaskBoundries);
@@ -32,7 +34,7 @@ export default function Dialog({ taskId, feature, map, view }) {
         })[0],
       };
       const findCorrectTaskStatusIndex = environment.tasksStatus.findIndex(
-        (data) => data.label == currentStatus.task_status_str,
+        (data) => data.label == currentStatus.task_status,
       );
       const tasksStatus =
         feature.id_ != undefined ? environment.tasksStatus[findCorrectTaskStatusIndex]?.['label'] : '';
@@ -49,9 +51,9 @@ export default function Dialog({ taskId, feature, map, view }) {
   // });
 
   const handleOnClick = (event) => {
-    const status = event.target.id;
+    const status = task_priority_str[event.target.id];
     const body = token != null ? { ...token } : {};
-    const geoStyle = geojsonStyles[status];
+    const geoStyle = geojsonStyles[event.target.id];
     if (event.target.id != undefined) {
       if (body.hasOwnProperty('id')) {
         dispatch(
@@ -100,7 +102,8 @@ export default function Dialog({ taskId, feature, map, view }) {
       </CoreModules.Stack>
       <CoreModules.Stack direction={'row'} pl={1}>
         <CoreModules.Typography variant="h3">
-          {`STATUS : ${task_status?.toString()?.replaceAll('_', ' ')}`}
+          {/* {`STATUS : ${task_status?.toString()?.replaceAll('_', ' ')}`} */}
+          {`STATUS : ${task_status}`}
         </CoreModules.Typography>
       </CoreModules.Stack>
       <CoreModules.Link

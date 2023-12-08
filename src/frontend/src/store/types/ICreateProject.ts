@@ -34,6 +34,7 @@ export type CreateProjectStateTypes = {
   createProjectValidations: {};
   isUnsavedChanges: boolean;
   canSwitchCreateProjectSteps: boolean;
+  isTasksGenerated: {};
 };
 export type ValidateCustomFormResponse = {
   detail: { message: string; possible_reason: string };
@@ -95,7 +96,8 @@ export type EditProjectDetailsTypes = {
 };
 
 export type ProjectDetailsTypes = {
-  dimension: number;
+  task_split_dimension: number;
+  task_num_buildings: number;
   no_of_buildings: number;
   odk_central_user?: string;
   odk_central_password?: string;
@@ -105,7 +107,7 @@ export type ProjectDetailsTypes = {
   hashtags?: string;
   short_description?: string;
   description?: string;
-  splitting_algorithm?: string;
+  task_split_type?: number;
   xform_title?: string;
   data_extract_options?: string;
   data_extractWays?: string;

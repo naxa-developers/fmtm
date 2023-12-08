@@ -83,7 +83,6 @@ services:
     container_name: fmtm-api-${GIT_BRANCH}
     volumes:
       - fmtm_logs:/opt/logs
-      - fmtm_images:/opt/app/images
       - fmtm_tiles:/opt/tiles
     depends_on:
       fmtm-db:
@@ -125,7 +124,7 @@ services:
       - SYSADMIN_EMAIL=${ODK_CENTRAL_USER}
       - SYSADMIN_PASSWD=${ODK_CENTRAL_PASSWD}
       - HTTPS_PORT=443
-      - DB_HOST=central-db
+      - DB_HOST=${CENTRAL_DB_HOST:-central-db}
       - DB_USER=${CENTRAL_DB_USER}
       - DB_PASSWORD=${CENTRAL_DB_PASSWORD}
       - DB_NAME=${CENTRAL_DB_NAME}
