@@ -20,8 +20,6 @@ const TasksComponent = ({ type, task, defaultTheme }) => {
       return indTask.id == task;
     })?.[0],
   };
-  const checkIfTaskAssignedOrNot =
-    currentStatus?.locked_by_username === token?.username || currentStatus?.locked_by_username === null;
 
   const { loading, qrcode } = ProjectFilesById(
     `${import.meta.env.VITE_API_URL}/tasks/task-list?project_id=${environment.decode(params.id)}`,
@@ -42,7 +40,6 @@ const TasksComponent = ({ type, task, defaultTheme }) => {
 
   return (
     <CoreModules.Stack>
-      {checkIfTaskAssignedOrNot && (
         <CoreModules.Stack direction={type == 's' ? 'column' : type == 'xs' ? 'column' : 'row'} spacing={2} mt={'1%'}>
           <BasicCard
             subtitle={{}}
@@ -138,7 +135,6 @@ const TasksComponent = ({ type, task, defaultTheme }) => {
             }
           />
         </CoreModules.Stack>
-      )}
     </CoreModules.Stack>
   );
 };
