@@ -1220,7 +1220,7 @@ async def generate_files_janakpur(
     log.debug(f"Generating media files tasks for project: {project_id}")
     xform_title = None
 
-    project = project_crud.get_project(db, project_id)
+    project = project_crud.sync_get_project(db, project_id)
     if not project:
         raise HTTPException(
             status_code=428, detail=f"Project with id {project_id} does not exist"
@@ -1272,13 +1272,10 @@ async def generate_files_janakpur(
     # generate a unique task ID using uuid
     background_task_id = uuid.uuid4()
 
-    # insert task and task ID into database
-    log.debug(
-        f"Creating background task ID {background_task_id} "
-        f"for project ID: {project_id}"
-    )
-    await project_crud.insert_background_task_into_database(
-        db, task_id=background_task_id, project_id=project_id
+    # Create task in db and return uuid
+    log.debug(f"Creating export background task for project ID: {project_id}")
+    background_task_id = await project_crud.insert_background_task_into_database(
+        db, project_id=project_id
     )
 
     log.debug(f"Submitting {background_task_id} to background tasks stack")
