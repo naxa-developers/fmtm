@@ -143,6 +143,14 @@ async def get_project(db: Session, project_id: int):
     )
     return db_project
 
+def sync_get_project(db: Session, project_id: int):
+    db_project = (
+        db.query(db_models.DbProject)
+        .filter(db_models.DbProject.id == project_id)
+        .first()
+    )
+    return db_project
+
 
 async def get_project_by_id(db: Session, project_id: int):
     db_project = (
@@ -2744,11 +2752,18 @@ def generate_appuser_files_for_janakpur(
 
         # Generating QR Code, XForm and uploading OSM Extracts to the form.
         # Creating app users and updating the role of that usegenerate_updated_xformr.
-        tasks_list = tasks_crud.get_task_lists(db, project_id)
+        # tasks_list = tasks_crud.get_task_lists(db, project_id)
 
+        get_task_lists_sync = async_to_sync(tasks_crud.get_task_lists)
+        tasks_list = get_task_lists_sync(db, project_id)
+        
         project_name = prefix
         odk_id = one.odkid
-        project_obj = get_project(db, project_id)
+        project_obj = sync_get_project(db, project_id)
+
+        get_task_lists_sync = async_to_sync(tasks_crud.get_task_lists)
+        tasks_list = get_task_lists_sync(db, project_id)
+        
 
         for task_id in tasks_list:
             # Generate taskFiles
@@ -2771,7 +2786,10 @@ def generate_appuser_files_for_janakpur(
                 odk_credentials.odk_central_url,
             )
 
-            task = tasks_crud.get_task(db, task_id)
+            get_task_sync = async_to_sync(tasks_crud.get_task)
+            task = get_task_sync(db, task_id)
+            
+            # task = tasks_crud.get_task(db, task_id)
             task.qr_code_id = create_qr["qr_code_id"]
             db.commit()
             db.refresh(task)

@@ -1220,7 +1220,7 @@ async def generate_files_janakpur(
     log.debug(f"Generating media files tasks for project: {project_id}")
     xform_title = None
 
-    project = project_crud.get_project(db, project_id)
+    project = project_crud.sync_get_project(db, project_id)
     if not project:
         raise HTTPException(
             status_code=428, detail=f"Project with id {project_id} does not exist"
