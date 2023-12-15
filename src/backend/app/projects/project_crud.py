@@ -2742,13 +2742,17 @@ def generate_appuser_files_for_janakpur(
         # Data Extracts
         if building_extracts_contents is not None:
             project_log.info("Uploading data extracts")
-            upload_custom_data_extracts(db, project_id, building_extracts_contents)
+            # upload_custom_data_extracts(db, project_id, building_extracts_contents)
+            upload_extract_sync = async_to_sync(upload_custom_data_extracts)
+            upload_extract_sync(db, project_id, building_extracts_contents, "highways")
 
         if road_extracts_contents is not None:
             project_log.info("Uploading roads data")
-            upload_custom_data_extracts(
-                db, project_id, road_extracts_contents, "highways"
-            )
+            # upload_custom_data_extracts(
+            #     db, project_id, road_extracts_contents, "highways"
+            # )
+            upload_extract_sync = async_to_sync(upload_custom_data_extracts)
+            upload_extract_sync(db, project_id, road_extracts_contents, "highways")
 
         # Generating QR Code, XForm and uploading OSM Extracts to the form.
         # Creating app users and updating the role of that usegenerate_updated_xformr.
@@ -2766,6 +2770,8 @@ def generate_appuser_files_for_janakpur(
         
 
         for task_id in tasks_list:
+            print("task id = ", task_id)
+
             # Generate taskFiles
             name = f"{project_name}_{category}_{task_id}"
 
@@ -2778,19 +2784,27 @@ def generate_appuser_files_for_janakpur(
 
             # prefix should be sent instead of name
             project_log.info(f"Creating qr code for task_id {task_id}")
-            create_qr = create_qrcode(
+            # create_qr = create_qrcode(
+            #     db,
+            #     odk_id,
+            #     appuser.json()["token"],
+            #     project_name,
+            #     odk_credentials.odk_central_url,
+            # )
+            create_qr_sync = async_to_sync(create_qrcode)
+            qr_code = create_qr_sync(
                 db,
                 odk_id,
                 appuser.json()["token"],
                 project_name,
                 odk_credentials.odk_central_url,
             )
-
+            print("qr code response = ", qr_code)
             get_task_sync = async_to_sync(tasks_crud.get_task)
             task = get_task_sync(db, task_id)
             
             # task = tasks_crud.get_task(db, task_id)
-            task.qr_code_id = create_qr["qr_code_id"]
+            task.qr_code_id = qr_code["qr_code_id"]
             db.commit()
             db.refresh(task)
 
