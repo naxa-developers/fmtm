@@ -2744,7 +2744,7 @@ def generate_appuser_files_for_janakpur(
             project_log.info("Uploading data extracts")
             # upload_custom_data_extracts(db, project_id, building_extracts_contents)
             upload_extract_sync = async_to_sync(upload_custom_data_extracts)
-            upload_extract_sync(db, project_id, building_extracts_contents, "highways")
+            upload_extract_sync(db, project_id, building_extracts_contents, "buildings")
 
         if road_extracts_contents is not None:
             project_log.info("Uploading roads data")
